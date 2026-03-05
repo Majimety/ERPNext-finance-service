@@ -1,26 +1,65 @@
-import requests
 import os
-import json
 from dotenv import load_dotenv
 
 load_dotenv()
 
 FRAPPE_URL = os.getenv("FRAPPE_URL")
-print("FRAPPE_URL =", FRAPPE_URL)
+USE_MOCK = not FRAPPE_URL or "localhost" in FRAPPE_URL
 
-HEADERS = {
-    "Authorization": f"token {os.getenv('FRAPPE_API_KEY')}:{os.getenv('FRAPPE_API_SECRET')}"
-}
+MOCK_DATA = [
+    {
+        "account": "Sales - KKU",
+        "debit": 0,
+        "credit": 50000,
+        "posting_date": "2026-01-10",
+        "voucher_no": "SINV-0001",
+    },
+    {
+        "account": "Sales - KKU",
+        "debit": 0,
+        "credit": 30000,
+        "posting_date": "2026-01-20",
+        "voucher_no": "SINV-0002",
+    },
+    {
+        "account": "Cost of Goods Sold - KKU",
+        "debit": 20000,
+        "credit": 0,
+        "posting_date": "2026-01-10",
+        "voucher_no": "COGS-0001",
+    },
+    {
+        "account": "Expenses - KKU",
+        "debit": 10000,
+        "credit": 0,
+        "posting_date": "2026-01-15",
+        "voucher_no": "EXP-0001",
+    },
+]
 
 
 def get_gl_entries(from_date, to_date, accounts=None):
+    if USE_MOCK:
+        print("⚠️  Using MOCK data (ERPNext not connected)")
+        result = []
+        for row in MOCK_DATA:
+            if accounts and row["account"] not in accounts:
+                continue
+            if str(from_date) <= row["posting_date"] <= str(to_date):
+                result.append(row)
+        return result
+
+    import requests, json
+
+    HEADERS = {
+        "Authorization": f"token {os.getenv('FRAPPE_API_KEY')}:{os.getenv('FRAPPE_API_SECRET')}"
+    }
     filters = [
         ["posting_date", ">=", str(from_date)],
         ["posting_date", "<=", str(to_date)],
         ["docstatus", "=", 1],
         ["company", "=", "KKU"],
     ]
-
     if accounts:
         filters.append(["account", "in", accounts])
 
@@ -35,9 +74,5 @@ def get_gl_entries(from_date, to_date, accounts=None):
             "limit_page_length": 1000,
         },
     )
-
-    print("STATUS:", res.status_code)
-    print("RESPONSE:", res.text)
-
     res.raise_for_status()
     return res.json().get("data", [])
