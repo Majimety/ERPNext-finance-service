@@ -4,7 +4,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 FRAPPE_URL = os.getenv("FRAPPE_URL")
-USE_MOCK = not FRAPPE_URL or "localhost" in FRAPPE_URL
+
+# USE_MOCK = not FRAPPE_URL or "localhost" in FRAPPE_URL
+USE_MOCK = False
 
 MOCK_INVOICES = [
     {

@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:FinanceDashboard.ViewModels"
+        x:Class="FinanceDashboard.Views.MainWindow"
+        x:DataType="vm:MainViewModel"
+        Title="Finance Dashboard — KKU"
+        Width="1280" Height="800"
+        MinWidth="1024" MinHeight="600"
+        Background="#0d0f0e">
+  <Grid ColumnDefinitions="220,*">
+    <Border Grid.Column="0" Background="#141716"
+            BorderBrush="#252826" BorderThickness="0,0,1,0">
+      <DockPanel>
+        <Border DockPanel.Dock="Top" Padding="24,28,24,24"
+                BorderBrush="#252826" BorderThickness="0,0,0,1">
+          <StackPanel>
+            <TextBlock Text="Finance" FontSize="22" Foreground="#e8ebe9" FontWeight="Bold"/>
+            <TextBlock Text="KKU — ERPNEXT" FontSize="10" Foreground="#6b7068" Margin="0,3,0,0"/>
+          </StackPanel>
+        </Border>
+        <Border DockPanel.Dock="Bottom" Padding="20,14"
+                BorderBrush="#252826" BorderThickness="0,1,0,0">
+          <TextBlock Text="finance-service v0.2" FontSize="10" Foreground="#6b7068"/>
+        </Border>
+        <ScrollViewer Padding="12,20">
+          <StackPanel>
+            <TextBlock Text="OVERVIEW" FontSize="9" Foreground="#6b7068" Margin="8,0,0,8"/>
+            <Button Content="Dashboard"     Click="NavBtn_Click" Tag="0" Classes="nav active" Margin="0,1"/>
+            <Button Content="KPI Summary"   Click="NavBtn_Click" Tag="1" Classes="nav" Margin="0,1"/>
+            <TextBlock Text="TRANSACTIONS" FontSize="9" Foreground="#6b7068" Margin="8,20,0,8"/>
+            <Button Content="Invoices"      Click="NavBtn_Click" Tag="2" Classes="nav" Margin="0,1"/>
+            <Button Content="Payments"      Click="NavBtn_Click" Tag="3" Classes="nav" Margin="0,1"/>
+            <Button Content="GL Entries"    Click="NavBtn_Click" Tag="4" Classes="nav" Margin="0,1"/>
+            <TextBlock Text="ANALYSIS" FontSize="9" Foreground="#6b7068" Margin="8,20,0,8"/>
+            <Button Content="Cost Center"   Click="NavBtn_Click" Tag="5" Classes="nav" Margin="0,1"/>
+            <Button Content="Budget Alerts" Click="NavBtn_Click" Tag="6" Classes="nav" Margin="0,1"/>
+            <Button Content="Export Report" Click="NavBtn_Click" Tag="7" Classes="nav" Margin="0,1"/>
+          </StackPanel>
+        </ScrollViewer>
+      </DockPanel>
+    </Border>
+    <DockPanel Grid.Column="1">
+      <Border DockPanel.Dock="Top" Height="60" Background="#141716"
+              BorderBrush="#252826" BorderThickness="0,0,0,1" Padding="28,0">
+        <DockPanel>
+          <TextBlock x:Name="PageTitleText" Text="Dashboard"
+                     FontSize="20" FontWeight="SemiBold"
+                     Foreground="#e8ebe9" VerticalAlignment="Center"/>
+          <StackPanel DockPanel.Dock="Right" Orientation="Horizontal"
+                      Spacing="10" VerticalAlignment="Center" HorizontalAlignment="Right">
+            <TextBlock Text="From" VerticalAlignment="Center" Foreground="#6b7068" FontSize="10"/>
+            <DatePicker SelectedDate="{Binding FromDate}"/>
+            <TextBlock Text="To" VerticalAlignment="Center" Foreground="#6b7068" FontSize="10"/>
+            <DatePicker SelectedDate="{Binding ToDate}"/>
+            <Button Content="Load Data" Command="{Binding LoadDataCommand}"
+                    IsEnabled="{Binding !IsLoading}" Classes="accent"/>
+          </StackPanel>
+        </DockPanel>
+      </Border>
+      <Border DockPanel.Dock="Top" Padding="28,10"
+              BorderBrush="#252826" BorderThickness="0,0,0,1">
+        <StackPanel Orientation="Horizontal" Spacing="10">
+          <Ellipse Width="8" Height="8" VerticalAlignment="Center"
+                   Fill="{Binding StatusColor}"/>
+          <TextBlock Text="{Binding StatusText}" FontSize="11" Foreground="#6b7068"/>
+        </StackPanel>
+      </Border>
+      <ScrollViewer Padding="28">
+        <ContentControl x:Name="PageHost"/>
+      </ScrollViewer>
+    </DockPanel>
+  </Grid>
+  <Window.Styles>
+    <Style Selector="Button.nav">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="Foreground" Value="#6b7068"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Padding" Value="10,9"/>
+      <Setter Property="HorizontalContentAlignment" Value="Left"/>
+      <Setter Property="CornerRadius" Value="6"/>
+      <Setter Property="FontSize" Value="13"/>
+      <Setter Property="Width" Value="NaN"/>
+    </Style>
+    <Style Selector="Button.nav:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#1c1f1d"/>
+      <Setter Property="TextElement.Foreground" Value="#e8ebe9"/>
+    </Style>
+    <Style Selector="Button.nav.active /template/ ContentPresenter">
+      <Setter Property="Background" Value="#1c1f1d"/>
+      <Setter Property="TextElement.Foreground" Value="#e8ebe9"/>
+    </Style>
+    <Style Selector="Button.accent">
+      <Setter Property="Background" Value="#b8f5a0"/>
+      <Setter Property="Foreground" Value="#0d0f0e"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Padding" Value="16,7"/>
+      <Setter Property="CornerRadius" Value="6"/>
+      <Setter Property="FontSize" Value="12"/>
+      <Setter Property="FontWeight" Value="Medium"/>
+    </Style>
+    <Style Selector="DataGrid">
+      <Setter Property="Background" Value="#141716"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Foreground" Value="#e8ebe9"/>
+      <Setter Property="FontSize" Value="12"/>
+    </Style>
+    <Style Selector="DataGridColumnHeader">
+      <Setter Property="Background" Value="#141716"/>
+      <Setter Property="Foreground" Value="#6b7068"/>
+      <Setter Property="FontSize" Value="10"/>
+      <Setter Property="Padding" Value="12,10"/>
+    </Style>
+  </Window.Styles>
+</Window>

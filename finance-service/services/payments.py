@@ -4,7 +4,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 FRAPPE_URL = os.getenv("FRAPPE_URL")
-USE_MOCK = not FRAPPE_URL or "localhost" in FRAPPE_URL
+
+# USE_MOCK = not FRAPPE_URL or "localhost" in FRAPPE_URL
+USE_MOCK = False
 
 MOCK_PAYMENTS = [
     {
@@ -13,6 +15,7 @@ MOCK_PAYMENTS = [
         "paid_amount": 50000,
         "posting_date": "2026-01-12",
         "mode_of_payment": "Bank Transfer",
+        "payment_type": "Receive",
     },
 ]
 
@@ -41,7 +44,14 @@ def get_payments(from_date, to_date):
                 ]
             ),
             "fields": json.dumps(
-                ["name", "party", "paid_amount", "posting_date", "mode_of_payment"]
+                [
+                    "name",
+                    "party",
+                    "paid_amount",
+                    "posting_date",
+                    "mode_of_payment",
+                    "payment_type",
+                ]
             ),
             "limit_page_length": 1000,
         },
