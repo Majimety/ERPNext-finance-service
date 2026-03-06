@@ -822,4 +822,17 @@ python test_kpi.py
 
 ---
 
+---
+
+## Team Members
+
+| Name | Student ID |
+|---|---|
+| 653040117-6 | นางสาวกมลนันท์ วงศ์พรมบุตร |
+| 653040120-7 | นายจิรายุส ทองยศ |
+| 653040628-1 | นางสาวพลอยรัตน์ ทองทับ |
+| 653040631-2 | นายฤทธิเกียรติ ปิยะวงค์ |
+
+---
+
 *Finance Dashboard — Team 6 — KKU ERPNext Integration Project*
