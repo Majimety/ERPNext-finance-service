@@ -1,7 +1,11 @@
+import os
+from dotenv import load_dotenv
 from .models import KPIResult
 from services.erpnext import get_gl_entries
 
-INCOME_ACCOUNTS = ["Sales - KKU"]
+load_dotenv()
+
+INCOME_ACCOUNTS = [os.getenv("INCOME_ACCOUNT", "Sales - KKU")]
 
 
 def calculate_revenue(from_date, to_date):

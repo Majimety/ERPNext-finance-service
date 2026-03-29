@@ -4,27 +4,30 @@ from dotenv import load_dotenv
 load_dotenv()
 
 FRAPPE_URL = os.getenv("FRAPPE_URL")
+COMPANY = os.getenv("COMPANY", "KKU")
+INCOME_ACCOUNT = os.getenv("INCOME_ACCOUNT", "Sales - KKU")
+COST_ACCOUNT = os.getenv("COST_ACCOUNT", "Cost of Goods Sold - KKU")
 
 # USE_MOCK = not FRAPPE_URL or "localhost" in FRAPPE_URL
 USE_MOCK = False
 
 MOCK_DATA = [
     {
-        "account": "Sales - KKU",
+        "account": INCOME_ACCOUNT,
         "debit": 0,
         "credit": 50000,
         "posting_date": "2026-01-10",
         "voucher_no": "SINV-0001",
     },
     {
-        "account": "Sales - KKU",
+        "account": INCOME_ACCOUNT,
         "debit": 0,
         "credit": 30000,
         "posting_date": "2026-01-20",
         "voucher_no": "SINV-0002",
     },
     {
-        "account": "Cost of Goods Sold - KKU",
+        "account": COST_ACCOUNT,
         "debit": 20000,
         "credit": 0,
         "posting_date": "2026-01-10",
@@ -60,7 +63,7 @@ def get_gl_entries(from_date, to_date, accounts=None):
         ["posting_date", ">=", str(from_date)],
         ["posting_date", "<=", str(to_date)],
         ["docstatus", "=", 1],
-        ["company", "=", "KKU"],
+        ["company", "=", COMPANY],
     ]
     if accounts:
         filters.append(["account", "in", accounts])
