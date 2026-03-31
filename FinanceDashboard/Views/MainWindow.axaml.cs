@@ -189,7 +189,7 @@ public partial class MainWindow : Window
     }
     private Control BuildCostCenter()
     {
-        var dg = MakeGrid(("Cost Center","CostCenterName"),("Debit","Debit"),("Credit","Credit"),("Net","Net"));
+        var dg = MakeGrid(("Cost Center","Name"),("Debit","Debit"),("Credit","Credit"),("Net","Net"));
         dg.ItemsSource = Vm.CostCenters; return Panel(dg, "Cost Center Breakdown", "GL Entry");
     }
 
