@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace FinanceDashboard.Models;
 
@@ -40,7 +41,8 @@ public class GlEntry
 
 public class CostCenter
 {
-    public string CostCenterName { get; set; } = "";
+    [JsonPropertyName("cost_center")]
+    public string Name { get; set; } = "";
     public double Debit { get; set; }
     public double Credit { get; set; }
     public double Net { get; set; }

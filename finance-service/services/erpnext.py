@@ -18,6 +18,7 @@ MOCK_DATA = [
         "credit": 50000,
         "posting_date": "2026-01-10",
         "voucher_no": "SINV-0001",
+        "cost_center": "Main - KKU",
     },
     {
         "account": INCOME_ACCOUNT,
@@ -25,6 +26,7 @@ MOCK_DATA = [
         "credit": 30000,
         "posting_date": "2026-01-20",
         "voucher_no": "SINV-0002",
+        "cost_center": "Research - KKU",
     },
     {
         "account": COST_ACCOUNT,
@@ -32,6 +34,7 @@ MOCK_DATA = [
         "credit": 0,
         "posting_date": "2026-01-10",
         "voucher_no": "COGS-0001",
+        "cost_center": "Main - KKU",
     },
     {
         "account": "Expenses - KKU",
@@ -39,6 +42,7 @@ MOCK_DATA = [
         "credit": 0,
         "posting_date": "2026-01-15",
         "voucher_no": "EXP-0001",
+        "cost_center": "Research - KKU",
     },
 ]
 
@@ -74,7 +78,14 @@ def get_gl_entries(from_date, to_date, accounts=None):
         params={
             "filters": json.dumps(filters),
             "fields": json.dumps(
-                ["account", "debit", "credit", "posting_date", "voucher_no"]
+                [
+                    "account",
+                    "debit",
+                    "credit",
+                    "posting_date",
+                    "voucher_no",
+                    "cost_center",
+                ]
             ),
             "limit_page_length": 1000,
         },
