@@ -1,0 +1,109 @@
+version: "3.8"
+
+services:
+
+  # ERPNext Stack 
+
+  frontend:
+    image: frappe/erpnext:v16.8.1
+    command: nginx-entrypoint.sh
+    environment:
+      BACKEND: backend:8000
+      SOCKETIO: websocket:9000
+      UPSTREAM_REAL_IP_ADDRESS: 127.0.0.1
+      UPSTREAM_REAL_IP_HEADER: X-Forwarded-For
+      UPSTREAM_REAL_IP_RECURSIVE: "off"
+      PROXY_READ_TIMEOUT: 120
+      CLIENT_MAX_BODY_SIZE: 50m
+    ports:
+      - "8080:8080"
+    volumes:
+      - sites:/home/frappe/frappe-bench/sites
+      - logs:/home/frappe/frappe-bench/logs
+    depends_on:
+      - backend
+      - websocket
+
+  backend:
+    image: frappe/erpnext:v16.8.1
+    volumes:
+      - sites:/home/frappe/frappe-bench/sites
+      - logs:/home/frappe/frappe-bench/logs
+
+  websocket:
+    image: frappe/erpnext:v16.8.1
+    command: node /home/frappe/frappe-bench/apps/frappe/socketio.js
+    volumes:
+      - sites:/home/frappe/frappe-bench/sites
+      - logs:/home/frappe/frappe-bench/logs
+
+  queue-short:
+    image: frappe/erpnext:v16.8.1
+    command: bench worker --queue short,default
+    volumes:
+      - sites:/home/frappe/frappe-bench/sites
+      - logs:/home/frappe/frappe-bench/logs
+
+  queue-long:
+    image: frappe/erpnext:v16.8.1
+    command: bench worker --queue long,default,short
+    volumes:
+      - sites:/home/frappe/frappe-bench/sites
+      - logs:/home/frappe/frappe-bench/logs
+
+  scheduler:
+    image: frappe/erpnext:v16.8.1
+    command: bench schedule
+    volumes:
+      - sites:/home/frappe/frappe-bench/sites
+      - logs:/home/frappe/frappe-bench/logs
+
+  db:
+    image: mariadb:10.6
+    healthcheck:
+      test: mysqladmin ping -h localhost --password=admin
+      interval: 1s
+      retries: 20
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --skip-character-set-client-handshake
+      - --skip-innodb-read-only-compressed
+    environment:
+      MYSQL_ROOT_PASSWORD: admin
+    volumes:
+      - db-data:/var/lib/mysql
+
+  redis-cache:
+    image: redis:6.2-alpine
+
+  redis-queue:
+    image: redis:6.2-alpine
+
+  # Finance Service (FastAPI)
+
+  finance-service:
+    build:
+      context: ./finance-service
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      FRAPPE_URL: http://frontend:8080
+      FRAPPE_API_KEY: ${FRAPPE_API_KEY}
+      FRAPPE_API_SECRET: ${FRAPPE_API_SECRET}
+      COMPANY: ${COMPANY:-KKU}
+      INCOME_ACCOUNT: ${INCOME_ACCOUNT:-Sales - KKU}
+      COST_ACCOUNT: ${COST_ACCOUNT:-Cost of Goods Sold - KKU}
+    volumes:
+      - ./finance-service:/app
+    depends_on:
+      - frontend
+    restart: unless-stopped
+
+# Volumes 
+
+volumes:
+  db-data:
+  sites:
+  logs:
