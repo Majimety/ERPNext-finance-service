@@ -131,7 +131,9 @@ All endpoints are synchronous functions wrapped with `run_in_threadpool` by Fast
 
 ```
 ERPNext-finance-service/
+├── docker-compose.yml             Docker Compose for ERPNext + finance-service (all-in-one)
 ├── finance-service/
+│   ├── Dockerfile                 Docker image definition for FastAPI service
 │   ├── main.py                    All API endpoints and routing
 │   ├── budget.py                  Budget alert logic and config persistence
 │   ├── .env                       Environment variables (not committed)
@@ -165,7 +167,7 @@ ERPNext-finance-service/
 │       └── MainWindow.axaml.cs    Page builder methods (BuildDashboard, BuildInvoices, etc.)
 │
 └── frappe_docker/
-    └── pwd.yml                    Docker Compose file for ERPNext + MariaDB + Redis
+    └── pwd.yml                    Original Docker Compose reference for ERPNext
 ```
 
 ---
@@ -174,49 +176,50 @@ ERPNext-finance-service/
 
 | Software | Minimum Version | Purpose |
 |---|---|---|
-| Docker Desktop | Latest | Runs ERPNext and its dependencies as containers |
-| Python | 3.13 | Runs the FastAPI backend |
+| Docker Desktop | Latest | Runs ERPNext + finance-service as containers |
 | .NET SDK | 10.0.103 | Builds and runs the Avalonia desktop app |
 
 Verify installations:
 
 ```powershell
 docker --version
-python --version
 dotnet --version
 ```
+
+> Python is **not** required on the host machine. The finance-service runs inside Docker.
 
 ---
 
 ## 5. Running the System
 
-All three components must be running simultaneously. Open three separate terminal windows.
+The backend (ERPNext + finance-service) runs via Docker Compose. The Avalonia desktop app runs separately.
 
-### Terminal 1 — Start ERPNext
+### Terminal 1 — Start Backend (ERPNext + finance-service)
 
-```powershell
-cd ERPNext-finance-service\frappe_docker
-docker compose -f pwd.yml up -d
+Create a `.env` file at the project root with your API credentials:
+
+```env
+FRAPPE_API_KEY=your_api_key_here
+FRAPPE_API_SECRET=your_api_secret_here
 ```
 
-Wait approximately 60 seconds for all services to become healthy, then verify:
+Then start all services:
 
 ```powershell
-docker compose -f pwd.yml ps
+docker compose up -d
 ```
 
-All nine services should show status `Up`. Open `http://localhost:8080` and log in with `Administrator` / `admin`.
-
-### Terminal 2 — Start FastAPI Backend
+Wait approximately 60 seconds for ERPNext to become healthy, then verify:
 
 ```powershell
-cd ERPNext-finance-service\finance-service
-uvicorn main:app --reload
+docker compose ps
 ```
 
-The server starts at `http://127.0.0.1:8000`. Confirm by opening `http://127.0.0.1:8000/docs` in a browser, which shows the auto-generated Swagger UI for all endpoints.
+All 10 services should show status `Up` or `running`. Open `http://localhost:8080` and log in with `Administrator` / `admin`.
 
-### Terminal 3 — Start Avalonia Dashboard
+Confirm finance-service is running at `http://localhost:8000/docs` (Swagger UI).
+
+### Terminal 2 — Start Avalonia Dashboard
 
 ```powershell
 cd ERPNext-finance-service\FinanceDashboard
@@ -233,6 +236,12 @@ The first run downloads NuGet packages and may take 1–2 minutes. A desktop win
 4. Configure budget targets in the **Budget Alerts** page
 5. Download CSV exports from the **Export Report** page
 
+### Stopping the System
+
+```powershell
+docker compose down
+```
+
 ### Building a Standalone Executable
 
 To produce a self-contained `.exe` that does not require .NET installed on the target machine:
@@ -248,19 +257,23 @@ Output is placed in `bin\Release\net10.0\win-x64\publish\`. The entire folder mu
 
 ## 6. Environment Variables
 
-All configuration lives in `finance-service/.env`. This file is not committed to version control.
+Create a `.env` file at the **project root** (same level as `docker-compose.yml`). This file is not committed to version control.
 
 ```env
-FRAPPE_URL=http://localhost:8080
 FRAPPE_API_KEY=your_api_key_here
 FRAPPE_API_SECRET=your_api_secret_here
+COMPANY=KKU
+INCOME_ACCOUNT=Sales - KKU
+COST_ACCOUNT=Cost of Goods Sold - KKU
 ```
 
-| Variable | Required | Description |
-|---|---|---|
-| `FRAPPE_URL` | Yes | Base URL of the ERPNext instance |
-| `FRAPPE_API_KEY` | Yes | API Key generated from ERPNext user settings |
-| `FRAPPE_API_SECRET` | Yes | API Secret generated from ERPNext user settings |
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `FRAPPE_API_KEY` | Yes | — | API Key generated from ERPNext user settings |
+| `FRAPPE_API_SECRET` | Yes | — | API Secret generated from ERPNext user settings |
+| `COMPANY` | No | `KKU` | Company name in ERPNext |
+| `INCOME_ACCOUNT` | No | `Sales - KKU` | GL account used for revenue calculation |
+| `COST_ACCOUNT` | No | `Cost of Goods Sold - KKU` | GL account used for cost calculation |
 
 ### Generating API Keys
 
@@ -728,7 +741,7 @@ All HTTP calls to ERPNext include `headers=HEADERS`. No session cookies or OAuth
 
 ### Test FastAPI Endpoints Directly
 
-With `uvicorn` running, open the following URLs in a browser:
+With Docker running, open the following URLs in a browser:
 
 ```
 http://localhost:8000/kpi/summary?from_date=2026-01-01&to_date=2026-01-31
@@ -756,8 +769,7 @@ To verify the full data pipeline from ERPNext to the Avalonia UI:
 ### Run Python Unit Tests
 
 ```powershell
-cd finance-service
-python test_kpi.py
+docker compose exec finance-service python test_kpi.py
 ```
 
 ---
@@ -769,14 +781,16 @@ python test_kpi.py
 | `dotnet` is not recognized | .NET SDK not installed or PATH not updated after install | Install .NET 10 SDK from microsoft.com/dotnet, close all terminals and reopen |
 | `No module named 'budget'` | `budget.py` missing from `finance-service/` root | Copy `budget.py` into the `finance-service/` directory alongside `main.py` |
 | `422 Unprocessable Content` on Load Data | Date format sent to API is invalid | Ensure `DateTimeOffset?` is used in `MainViewModel.cs` for `FromDate` and `ToDate` |
-| `500 Connection refused` to `localhost:8080` | ERPNext Docker containers are not running | Run `docker compose -f pwd.yml up -d` and wait 60 seconds |
+| `500 Connection refused` to `localhost:8080` | ERPNext Docker containers are not running | Run `docker compose up -d` and wait 60 seconds |
 | All KPI values show zero | `USE_MOCK` flag is `True` in `erpnext.py` | Set `USE_MOCK = False` in `services/erpnext.py` |
-| Data shows mock values (บริษัท A, บริษัท B) | `USE_MOCK` still active | Confirm `.env` has correct `FRAPPE_URL` and `USE_MOCK = False` |
+| Data shows mock values (บริษัท A, บริษัท B) | `USE_MOCK` still active | Confirm `.env` has correct `FRAPPE_API_KEY` and `USE_MOCK = False` |
 | `App.axaml AVLN1001` XAML error | `App.axaml` contains wrong content (e.g., csproj was pasted) | Recreate `App.axaml` with correct Avalonia XML starting with `<?xml version="1.0"` |
 | `DataGrid` type not found | Missing `Avalonia.Controls.DataGrid` NuGet package | Confirm `FinanceDashboard.csproj` includes the DataGrid package reference and `App.axaml` includes the DataGrid style |
 | `GetVisualDescendants` not found | Missing `using Avalonia.VisualTree;` | Add `using Avalonia.VisualTree;` to `MainWindow.axaml.cs` |
 | Not permitted on `/app/user/Administrator` | ERPNext permission restriction on Administrator record | Navigate to `/app/user/admin@example.com` instead |
 | Docker `open //./pipe/dockerDesktopLinuxEngine` error | Docker Desktop is not running | Open Docker Desktop from the Start menu and wait for the status icon to turn green |
+| Port 8080 already allocated | Previous ERPNext containers still running | Run `docker compose down` then `docker compose up -d` again |
+| `FRAPPE_API_KEY variable is not set` warning | `.env` file missing at project root | Create `.env` at the same level as `docker-compose.yml` with your API credentials |
 
 ---
 
@@ -806,7 +820,7 @@ python test_kpi.py
 
 ---
 
-## Docker Services (frappe_docker/pwd.yml)
+## Docker Services (`docker-compose.yml`)
 
 | Service | Image | Purpose |
 |---|---|---|
@@ -819,8 +833,7 @@ python test_kpi.py
 | `queue-long` | `frappe/erpnext:v16.8.1` | Long background job worker |
 | `scheduler` | `frappe/erpnext:v16.8.1` | Scheduled task runner |
 | `websocket` | `frappe/erpnext:v16.8.1` | Real-time websocket server |
-
----
+| `finance-service` | Built from `finance-service/Dockerfile` | FastAPI backend for KPI, invoices, payments, budget alerts |
 
 ---
 
